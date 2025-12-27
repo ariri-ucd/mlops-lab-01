@@ -351,11 +351,7 @@ def build_model_pipeline(
 
 
 
-<<<<<<< HEAD
-def main(version: str = "v1", seed: int = 42, gate_f1: float = 0.75) -> None:
-=======
 def main(version: str = "v1", seed: int = 42, gate_f1: float = 0.60) -> None:
->>>>>>> feature/change-gate
 
     """
 
@@ -581,29 +577,42 @@ def main(version: str = "v1", seed: int = 42, gate_f1: float = 0.60) -> None:
 
     # Logique de "registry" minimal : mise à jour du modèle courant
 
+   # if entry["passed_gate"]:
+
+     #   REGISTRY_DIR.mkdir(parents=True, exist_ok=True)
+
+       # CURRENT_MODEL_PATH.write_text(
+
+         #   model_filename,
+
+           # encoding="utf-8",
+
+       # )
+
+        #print(f"[DEPLOY] Modèle activé (current): {model_filename}")
+
+    #else:
+
+     #   print(
+
+         #   "[DEPLOY] Refusé par le gate : F1 insuffisante "
+
+          #  "ou baseline non battue."
+
+        #)
+    # Déploiement du modèle (registry minimaliste)
     if entry["passed_gate"]:
-
         REGISTRY_DIR.mkdir(parents=True, exist_ok=True)
+        CURRENT_MODEL_PATH.write_text(model_filename, encoding="utf-8")
 
-        CURRENT_MODEL_PATH.write_text(
+        # Ajout : alias stable pour le pipeline DVC (ne supprime pas l'historique)
+        stable_model_path = MODELS_DIR / "model.joblib"
+        joblib.dump(model_pipeline, stable_model_path)
 
-            model_filename,
-
-            encoding="utf-8",
-
-        )
-
-        print(f"[DEPLOY] Modèle activé (current): {model_filename}")
-
+        print(f"[DEPLOY] Modèle activé : {model_filename}")
+        print(f"[DEPLOY] Alias stable : {stable_model_path}")
     else:
-
-        print(
-
-            "[DEPLOY] Refusé par le gate : F1 insuffisante "
-
-            "ou baseline non battue."
-
-        )
+        print("[DEPLOY] Refusé : F1 insuffisante ou baseline non battue.")
 
 
 

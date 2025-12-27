@@ -415,6 +415,7 @@ def main() -> None:
     numeric_cols = ["tenure_months", "num_complaints", "avg_session_minutes"]
 
     stats = compute_numeric_stats(df_clean, numeric_cols=numeric_cols)
+    #comments
 
 
 
