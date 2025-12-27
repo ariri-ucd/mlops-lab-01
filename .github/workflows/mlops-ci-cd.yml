@@ -10,32 +10,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          python-version: ${{ secrets.PY_VERSION }}
+          python-version: ${{ vars.PY_VERSION }}
 
       - name: Cache pip
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: pip-${{ runner.os }}-${{ secrets.PY_VERSION }}-${{ hashFiles('**/requirements.txt') }}
+          key: pip-${{ runner.os }}-${{ vars.PY_VERSION }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            pip-${{ runner.os }}-${{ secrets.PY_VERSION }}-
+            pip-${{ runner.os }}-${{ vars.PY_VERSION }}-
 
       - name: Installer dépendances
         run: |
-          pip install -U pip
+          python -m pip install --upgrade pip
           pip install dvc pandas numpy scikit-learn joblib
 
       - name: Restaurer cache DVC
         uses: actions/cache@v4
         with:
           path: .dvc/cache
-          key: dvc-${{ runner.os }}-${{ secrets.PY_VERSION }}-${{ github.sha }}
+          key: dvc-${{ runner.os }}-${{ vars.PY_VERSION }}-${{ github.sha }}
           restore-keys: |
-            dvc-${{ runner.os }}-${{ secrets.PY_VERSION }}-
+            dvc-${{ runner.os }}-${{ vars.PY_VERSION }}-
 
       - name: Afficher le DAG DVC
         run: dvc dag
@@ -50,13 +52,13 @@ jobs:
         run: |
           python - << 'EOF'
           import json
-          threshold = float("${{ secrets.F1_GATE_THRESHOLD }}")
+          threshold = float("${{ vars.F1_GATE_THRESHOLD }}")
           with open("reports/metrics.json", "r", encoding="utf-8") as f:
               metrics = json.load(f)
           f1 = float(metrics.get("f1", 0.0))
           print(f"F1={f1} | seuil={threshold}")
           if f1 < threshold:
-              raise SystemExit("Quality Gate échoué : F1 insuffisante")
+              raise SystemExit(" Quality Gate échoué : F1 insuffisante")
           print("Quality Gate validé")
           EOF
 
@@ -75,7 +77,8 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Télécharger artefacts validés
         uses: actions/download-artifact@v4
@@ -86,8 +89,8 @@ jobs:
       - name: CD simulé (déploiement SSH)
         run: |
           echo "=== Phase CD (simulée) ==="
-          echo "ENV               : ${{ secrets.APP_ENV }}"
-          echo "F1 gate           : ${{ secrets.F1_GATE_THRESHOLD }}"
+          echo "ENV               : ${{ vars.APP_ENV }}"
+          echo "F1 gate           : ${{ vars.F1_GATE_THRESHOLD }}"
           echo "Secret (demo)     : ${{ secrets.DEMO_SECRET }}"
           echo
           echo "Artefacts prêts :"
